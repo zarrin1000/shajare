@@ -1,0 +1,55 @@
+# پوشه‌های بیلد و موقت
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+pubspec.lock
+
+# فایل‌های IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# فایل‌های سیستمی
+.DS_Store
+Thumbs.db
+
+# فایل‌های APK و خروجی‌ها
+*.apk
+*.aab
+*.ipa
+
+# Android
+android/.gradle/
+android/local.properties
+android/captures/
+android/gradlew
+android/gradlew.bat
+
+# iOS
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral
+ios/Flutter/app.flx
+ios/Flutter/app.zip
+ios/Flutter/flutter_assets/
+ios/Flutter/flutter_export_environment.sh
+ios/ServiceDefinitions.json
+ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS
+macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Linux
+linux/flutter/ephemeral/
+linux/flutter/generated_*
+
+# Windows
+windows/flutter/ephemeral/
+windows/flutter/generated_*
