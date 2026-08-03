@@ -11,26 +11,33 @@ class UpdateChecker {
   // لینک فایل JSON که در مرحله ۲ ساختید (لینک Raw گیت‌هاب را بگذارید)
   static const String updateJsonUrl = "https://rahoraz.ir/shajare-v2/downloads/update_info.json";
 
-  static Future<void> checkForUpdate(BuildContext context) async {
-    try {
-      final packageInfo = await PackageInfo.fromPlatform();
-      final currentVersion = packageInfo.version;
+static Future<void> checkForUpdate(BuildContext context) async {
+  try {
+    final packageInfo = await PackageInfo.fromPlatform();
+    final currentVersion = packageInfo.version;
 
-      final response = await http.get(Uri.parse(updateJsonUrl));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final latestVersion = data['latest_version'];
-        final downloadUrl = data['download_url'];
-        final message = data['update_message'];
+    // اضافه کردن پارامتر زمانی برای دور زدن کش سرور و کلاینت
+    final uri = Uri.parse(updateJsonUrl).replace(
+      queryParameters: {'t': DateTime.now().millisecondsSinceEpoch.toString()},
+    );
 
-        if (latestVersion != currentVersion) {
-          _showUpdateDialog(context, latestVersion, message, downloadUrl);
-        }
+    final response = await http.get(uri);
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final latestVersion = data['latest_version'];
+      final downloadUrl = data['download_url'];
+      final message = data['update_message'];
+
+      // مقایسه نسخه‌ها
+      if (latestVersion != currentVersion) {
+        _showUpdateDialog(context, latestVersion, message, downloadUrl);
       }
-    } catch (e) {
-      print("خطا در بررسی بروزرسانی: $e");
     }
+  } catch (e) {
+    debugPrint("خطا در بررسی بروزرسانی: $e");
   }
+}
 
   static void _showUpdateDialog(BuildContext context, String version, String message, String url) {
     showDialog(
