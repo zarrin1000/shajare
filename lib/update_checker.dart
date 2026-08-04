@@ -8,48 +8,66 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:convert';
 
 class UpdateChecker {
-  // لینک فایل JSON که در مرحله ۲ ساختید (لینک Raw گیت‌هاب را بگذارید)
-  static const String updateJsonUrl = "https://rahoraz.ir/shajare-v2/downloads/update_info.json";
+  // آدرس API جدید
+  static const String updateApiUrl = "https://rahoraz.ir/shajare-v2/api/api_app_update.php";
 
-static Future<void> checkForUpdate(BuildContext context) async {
-  try {
-    final packageInfo = await PackageInfo.fromPlatform();
-    final currentVersion = packageInfo.version;
+  static Future<void> checkForUpdate(BuildContext context) async {
+    try {
+      // دریافت نسخه فعلی اپلیکیشن
+      final packageInfo = await PackageInfo.fromPlatform();
+      final currentVersion = packageInfo.version;
+      
+      debugPrint("🔍 Checking for updates...");
+      debugPrint("Current Version: $currentVersion");
+      
+      // اضافه کردن پارامترهای لازم برای API
+      final uri = Uri.parse(updateApiUrl).replace(
+        queryParameters: {
+          'version': currentVersion,
+          't': DateTime.now().millisecondsSinceEpoch.toString(),
+        },
+      );
 
-    // اضافه کردن پارامتر زمانی برای دور زدن کش سرور و کلاینت
-    final uri = Uri.parse(updateJsonUrl).replace(
-      queryParameters: {'t': DateTime.now().millisecondsSinceEpoch.toString()},
-    );
-
-    final response = await http.get(uri);
-    
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final latestVersion = data['latest_version'];
-      final downloadUrl = data['download_url'];
-      final message = data['update_message'];
-
-      // مقایسه نسخه‌ها
-      if (latestVersion != currentVersion) {
-        _showUpdateDialog(context, latestVersion, message, downloadUrl);
+      final response = await http.get(uri);
+      
+      debugPrint("API Response Status: ${response.statusCode}");
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        debugPrint("API Response: $data");
+        
+        // بررسی آیا آپدیت موجود است
+        if (data['has_update'] == true) {
+          final message = data['message'] ?? 'نسخه جدید موجود است';
+          final description = data['description'] ?? 'لطفاً اپلیکیشن را بروزرسانی کنید.';
+          final downloadUrl = data['download_url'] ?? 'https://rahoraz.ir/shajare-v2/downloads/app-release.apk';
+          
+          _showUpdateDialog(context, message, description, downloadUrl);
+        } else {
+          debugPrint("✅ No update needed");
+        }
+      } else {
+        debugPrint("❌ Failed to fetch update info. Status: ${response.statusCode}");
       }
+    } catch (e) {
+      debugPrint("❌ Error in update check: $e");
+      // نمایش خطا به کاربر برای عیب‌یابی
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطا در بررسی آپدیت: $e')),
+      );
     }
-  } catch (e) {
-    debugPrint("خطا در بررسی بروزرسانی: $e");
   }
-}
 
-  static void _showUpdateDialog(BuildContext context, String version, String message, String url) {
+  static void _showUpdateDialog(BuildContext context, String title, String message, String url) {
     showDialog(
       context: context,
-      barrierDismissible: false, // کاربر نمی‌تواند پنجره را ببندد
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('بروزرسانی جدید موجود است!', textAlign: TextAlign.right),
+        title: Text(title, textAlign: TextAlign.right),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('نسخه $version', style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
             Text(message, textAlign: TextAlign.right),
           ],
         ),
@@ -72,25 +90,21 @@ static Future<void> checkForUpdate(BuildContext context) async {
   }
 
   static Future<void> _downloadAndInstall(String url, BuildContext context) async {
-    // نمایش یک دیالوگ ساده در حال دانلود (می‌توانید با CircularProgressIndicator زیباترش کنید)
     showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
 
     try {
-      // ۱. درخواست مجوز ذخیره‌سازی (برای اندرویدهای قدیمی‌تر)
       if (await Permission.storage.request().isDenied) {
         Navigator.pop(context);
         return;
       }
 
-      // ۲. دانلود فایل
       final response = await http.get(Uri.parse(url));
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/app-update.apk');
       await file.writeAsBytes(response.bodyBytes);
 
-      Navigator.pop(context); // بستن دیالوگ دانلود
+      Navigator.pop(context);
 
-      // ۳. باز کردن فایل برای نصب
       final result = await OpenFile.open(file.path);
       if (result.type != ResultType.done) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -41,3 +41,11 @@ dependencies {
     implementation("androidx.core:core:1.10.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
 }
+
+// غیرفعال کردن کامل Lint برای جلوگیری از خطای Metaspace
+android {
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
+}

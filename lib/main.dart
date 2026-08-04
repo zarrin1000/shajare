@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shajare/main_screen.dart';
-import 'update_checker.dart'; // اضافه کردن فایل چک‌کننده بروزرسانی
+import 'update_checker.dart';
 
 void main() {
-  // اطمینان از اینکه ویجت‌های فلاتر قبل از اجرای پلاگین‌ها مقداردهی شده‌اند
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
@@ -20,7 +19,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     
-    // بررسی بروزرسانی با ۲ ثانیه تاخیر برای اطمینان از لود شدن کامل رابط کاربری
+    // بررسی بروزرسانی با ۲ ثانیه تاخیر
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         UpdateChecker.checkForUpdate(context);
